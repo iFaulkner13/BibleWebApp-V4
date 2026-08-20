@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Verse Import Tool</title>
+<style>
+    :root { color-scheme: dark; }
+    body {
+        margin: 0; padding: 2rem; background: #111; color: #eee;
+        font-family: 'Segoe UI', system-ui, sans-serif; line-height: 1.5;
+    }
+    h1 { color: #10b981; font-size: 1.5rem; margin: 0 0 .3rem; }
+    .sub { color: #9ca3af; font-size: .9rem; margin: 0 0 1.5rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
+    @media (max-width: 950px) { .grid { grid-template-columns: 1fr; } }
+    label { display: block; font-size: .8rem; text-transform: uppercase;
+            letter-spacing: .06em; color: #10b981; font-weight: 700; margin-bottom: .4rem; }
+    textarea {
+        width: 100%; height: 46vh; box-sizing: border-box; padding: .8rem;
+        background: #1c1c1c; color: #eee; border: 2px solid #10b981;
+        border-radius: .5rem; font-family: Consolas, monospace; font-size: .85rem;
+        resize: vertical; white-space: pre; overflow-wrap: normal; overflow-x: auto;
+    }
+    textarea:focus { outline: none; border-color: #fff; }
+    #out { border-color: #3b82f6; }
+    .row { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; margin: .8rem 0; }
+    select, button {
+        background: #1c1c1c; color: #eee; border: 1px solid #444;
+        border-radius: .4rem; padding: .5rem .9rem; font-size: .9rem; cursor: pointer;
+    }
+    button.primary { background: #059669; border-color: #059669; color: #fff; font-weight: 700; }
+    button.primary:hover { background: #10b981; }
+    #status { font-size: .9rem; min-height: 1.4em; }
+    .ok { color: #6ee7b7; } .warn { color: #fbbf24; } .err { color: #fca5a5; }
+    details { background: #1a1a1a; border-radius: .5rem; padding: 1rem; margin-bottom: 1.5rem; }
+    summary { cursor: pointer; color: #10b981; font-weight: 700; }
+    code { background: #262626; padding: .1em .35em; border-radius: .25em; }
+    pre { background: #262626; padding: .8rem; border-radius: .4rem; overflow-x: auto; font-size: .82rem; }
+    ul { margin: .5rem 0; padding-left: 1.2rem; }
+</style>
+</head>
+<body>
+
+<h1>Verse Import Tool</h1>
+<p class="sub">
+    Turns plain verse text into correctly escaped JavaScript for the
+    <code>translations</code> object in index.html. Escaping is the point:
+    one bare apostrophe in a pasted verse took the whole app down.
+</p>
+
+<details>
+    <summary>How to use it</summary>
+    <p>Paste one verse per line on the left, reference and text separated by a tab, a pipe, or an equals sign:</p>
+<pre>1:1      Ang pagkasaysay ng lahi ni Jesucristo...
+1:2      Kay naging anak ni Abraham si Isaac...</pre>
+    <p>A full reference works too, and the book name is ignored — only the chapter:verse is used:</p>
+<pre>Luke 1:1 | Yamang marami ang nagpilit mag-ayos...</pre>
+    <p>Pick the language and book, press Convert, then paste the right-hand output into the matching
+       book inside <code>translations</code> in index.html.</p>
+    <p><strong>What it protects against:</strong></p>
+    <ul>
+        <li>apostrophes and quotes inside the verse (the bug that broke the app)</li>
+        <li>backslashes, tabs, and stray line breaks</li>
+        <li>duplicate references in your paste</li>
+        <li>references that are not <code>chapter:verse</code></li>
+    </ul>
+    <p>The output is validated by actually parsing it before it is shown, so what you copy is known to be loadable.</p>
+</details>
+
+<div class="row">
+    <label style="margin:0;">Language</label>
+    <select id="lang">
+        <option value="tl">tl — Tagalog</option>
+        <option value="ceb">ceb — Cebuano</option>
+    </select>
+    <label style="margin:0;">Book</label>
+    <select id="book"></select>
+    <select id="wrap">
+        <option value="verses">verses only</option>
+        <option value="book">wrapped in book key</option>
+    </select>
+    <button class="primary" id="go">Convert</button>
+    <button id="copy">Copy output</button>
+</div>
+<p id="status"></p>
+
+<div class="grid">
+    <div>
+        <label for="in">Paste verses here</label>
+        <textarea id="in" spellcheck="false" placeholder="1:1&#9;Verse text here&#10;1:2&#9;Next verse here"></textarea>
+    </div>
+    <div>
+        <label for="out">Escaped JavaScript output</label>
+        <textarea id="out" spellcheck="false" readonly></textarea>
+    </div>
+</div>
+
+<script>
+const BOOKS = ["Genesis","Exodus","Leviticus","Numbers","Deuteronomy","Joshua","Judges","Ruth",
+"1 Samuel","2 Samuel","1 Kings","2 Kings","1 Chronicles","2 Chronicles","Ezra","Nehemiah","Esther",
+"Job","Psalms","Proverbs","Ecclesiastes","Song of Solomon","Isaiah","Jeremiah","Lamentations",
+"Ezekiel","Daniel","Hosea","Joel","Amos","Obadiah","Jonah","Micah","Nahum","Habakkuk","Zephaniah",
+"Haggai","Zechariah","Malachi","Matthew","Mark","Luke","John","Acts","Romans","1 Corinthians",
+"2 Corinthians","Galatians","Ephesians","Philippians","Colossians","1 Thessalonians",
+"2 Thessalonians","1 Timothy","2 Timothy","Titus","Philemon","Hebrews","James","1 Peter","2 Peter",
+"1 John","2 John","3 John","Jude","Revelation"];
+
+const $ = id => document.getElementById(id);
+$('book').innerHTML = BOOKS.map(b => `<option>${b}</option>`).join('');
+$('book').value = 'Luke';
+
+/** Escapes a verse so it is safe inside a single-quoted JS string. */
+function escapeVerse(text) {
+    return text
+        .replace(/\\/g, '\\\\')   // backslashes first, or later escapes double up
+        .replace(/'/g, "\\'")     // the apostrophe that broke the app
+        .replace(/\r?\n/g, ' ')   // no raw newlines inside a string
+        .replace(/\t/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function convert() {
+    const raw = $('in').value.split(/\r?\n/);
+    const rows = [], problems = [], seen = new Map();
+
+    raw.forEach((line, i) => {
+        if (!line.trim()) return;
+        // reference and text split on tab, pipe, or equals
+        const m = line.match(/^\s*(.*?)\s*(?:\t+|\s*\|\s*|\s*=\s*)\s*(.+)$/);
+        if (!m) { problems.push(`line ${i + 1}: no separator (use a tab, | or =)`); return; }
+
+        const refMatch = m[1].match(/(\d+)\s*:\s*(\d+)\s*$/);
+        if (!refMatch) { problems.push(`line ${i + 1}: "${m[1]}" is not chapter:verse`); return; }
+
+        const ref = `${Number(refMatch[1])}:${Number(refMatch[2])}`;
+        const text = escapeVerse(m[2]);
+        if (!text) { problems.push(`line ${i + 1}: ${ref} has no text`); return; }
+        if (seen.has(ref)) { problems.push(`line ${i + 1}: ${ref} repeats line ${seen.get(ref)}`); return; }
+
+        seen.set(ref, i + 1);
+        rows.push(`                    '${ref}': '${text}',`);
+    });
+
+    if (!rows.length) {
+        $('out').value = '';
+        report(problems, 0);
+        return;
+    }
+
+    const body = rows.join('\n');
+    const output = $('wrap').value === 'book'
+        ? `                '${$('book').value}': {\n${body}\n                },`
+        : body;
+
+    // Prove the output actually parses before handing it over.
+    try {
+        new Function('return ({' + rows.join('\n').replace(/,$/, '') + '});')();
+    } catch (error) {
+        $('out').value = '';
+        $('status').className = 'err';
+        $('status').textContent = 'Output failed its own parse check: ' + error.message;
+        return;
+    }
+
+    $('out').value = output;
+    report(problems, rows.length);
+}
+
+function report(problems, count) {
+    const s = $('status');
+    if (problems.length) {
+        s.className = count ? 'warn' : 'err';
+        s.textContent = `${count} verse${count === 1 ? '' : 's'} converted, ${problems.length} skipped — ` +
+            problems.slice(0, 4).join('; ') + (problems.length > 4 ? ` …and ${problems.length - 4} more` : '');
+    } else {
+        s.className = 'ok';
+        s.textContent = `${count} verse${count === 1 ? '' : 's'} converted and parse-checked. Safe to paste.`;
+    }
+}
+
+$('go').addEventListener('click', convert);
+$('copy').addEventListener('click', () => {
+    if (!$('out').value) return;
+    $('out').select();
+    document.execCommand('copy');
+    $('status').className = 'ok';
+    $('status').textContent = 'Output copied to clipboard.';
+});
+</script>
+</body>
+</html>

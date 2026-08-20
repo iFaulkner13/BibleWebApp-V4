@@ -1,0 +1,33 @@
+rules_version = '2';
+
+// Firestore security rules for the Bible Verse Display System.
+//
+// Copy this into Firebase console -> Firestore Database -> Rules -> Publish.
+//
+// The whole security model rests on these rules. The vault document holds the
+// AES key for app.enc; nothing else in the database matters. A request may
+// read it only if Firebase has verified the caller's password AND the caller's
+// uid has been placed on the allow-list by hand.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // The sealed key. Read-only, and only for signed-in, allow-listed accounts.
+    match /vault/{document} {
+      allow read: if request.auth != null
+                  && exists(/databases/$(database)/documents/allowlist/$(request.auth.uid));
+      allow write: if false;   // console only
+    }
+
+    // The allow-list itself. An account may confirm its own entry and nothing
+    // more, so no one can enumerate who else has access.
+    match /allowlist/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;   // console only
+    }
+
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

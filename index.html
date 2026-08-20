@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Bible Verse Display System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --blue: #3b82f6;
+        --blue-dark: #2563eb;
+        --panel: #1a1a1a;
+        --edge: #333;
+        --muted: #9ca3af;
+        --danger: #f87171;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        background-color: #000;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        overflow: hidden;
+    }
+    .card {
+        width: 100%;
+        max-width: 25rem;
+        background-color: var(--panel);
+        border: 2px solid var(--edge);
+        border-radius: 0.75rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        padding: 2.25rem 2rem;
+    }
+    .crest {
+        width: 3.25rem;
+        height: 3.25rem;
+        margin: 0 auto 1.25rem;
+        border-radius: 0.75rem;
+        background-color: rgba(59, 130, 246, 0.15);
+        border: 1px solid rgba(59, 130, 246, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .crest svg { width: 1.5rem; height: 1.5rem; stroke: var(--blue); }
+    h1 {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 1.15rem;
+        letter-spacing: 0.02em;
+        text-align: center;
+        margin: 0 0 0.4rem;
+    }
+    .sub {
+        text-align: center;
+        font-size: 0.8rem;
+        font-weight: 300;
+        color: var(--muted);
+        margin: 0 0 1.75rem;
+    }
+    label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 0.4rem;
+    }
+    input[type="text"], input[type="password"] {
+        width: 100%;
+        padding: 0.8rem 0.9rem;
+        font-size: 1rem;
+        font-family: inherit;
+        color: #fff;
+        background-color: #2d2d2d;
+        border: 2px solid var(--edge);
+        border-radius: 0.5rem;
+        transition: border-color 0.15s ease-in-out;
+    }
+    input:focus { outline: none; border-color: var(--blue); }
+    .field { margin-bottom: 1.1rem; }
+    button.primary {
+        width: 100%;
+        padding: 0.85rem;
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #fff;
+        background-color: var(--blue);
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out;
+    }
+    button.primary:hover:not(:disabled) { background-color: var(--blue-dark); }
+    button.primary:disabled { background-color: #4b5563; cursor: not-allowed; opacity: 0.7; }
+    .notice {
+        margin-top: 1rem;
+        min-height: 1.15rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-align: center;
+        color: var(--danger);
+    }
+    .foot {
+        margin-top: 1.5rem;
+        padding-top: 1.1rem;
+        border-top: 1px solid var(--edge);
+        font-size: 0.68rem;
+        font-weight: 300;
+        line-height: 1.5;
+        text-align: center;
+        color: #6b7280;
+    }
+    /* ---- unlocking view ---- */
+    .stage { display: none; }
+    .stage.on { display: block; }
+    .bar {
+        height: 0.4rem;
+        background-color: #2d2d2d;
+        border-radius: 999px;
+        overflow: hidden;
+        margin: 1.5rem 0 0.75rem;
+    }
+    .bar > i {
+        display: block;
+        height: 100%;
+        width: 0%;
+        background-color: var(--blue);
+        border-radius: 999px;
+        transition: width 0.2s ease-out;
+    }
+    .step {
+        font-size: 0.8rem;
+        font-weight: 400;
+        color: var(--muted);
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+
+<main class="card">
+    <div class="crest">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+    </div>
+
+    <!-- ---------- sign in ---------- -->
+    <section id="stage-signin" class="stage on">
+        <h1>BIBLE VERSE DISPLAY SYSTEM</h1>
+        <p class="sub">Authorised users only</p>
+        <form id="signin-form" autocomplete="on">
+            <div class="field">
+                <label for="who">Name</label>
+                <input id="who" name="username" type="text" autocomplete="username"
+                       autocapitalize="none" autocorrect="off" spellcheck="false" required>
+            </div>
+            <div class="field">
+                <label for="pw">Password</label>
+                <input id="pw" name="password" type="password" autocomplete="current-password" required>
+            </div>
+            <button id="go" class="primary" type="submit">Sign in</button>
+        </form>
+        <p id="notice" class="notice" role="alert" aria-live="polite"></p>
+        <p class="foot">
+            Accounts are issued by the administrator.<br>
+            Every sign-in attempt is verified on the server.
+        </p>
+    </section>
+
+    <!-- ---------- unlocking ---------- -->
+    <section id="stage-open" class="stage">
+        <h1>UNLOCKING</h1>
+        <p class="sub" id="who-label">&nbsp;</p>
+        <div class="bar"><i id="bar"></i></div>
+        <p class="step" id="step">Verifying access&hellip;</p>
+        <p class="foot">Large library &mdash; the first load takes a moment.</p>
+    </section>
+
+    <!-- ---------- dead end ---------- -->
+    <section id="stage-stop" class="stage">
+        <h1>UNAVAILABLE</h1>
+        <p class="sub" id="stop-why">&nbsp;</p>
+        <button id="retry" class="primary" type="button">Back to sign in</button>
+    </section>
+</main>
+
+<script type="module">
+/* ==========================================================================
+   Bible Verse Display System - access gate
+   --------------------------------------------------------------------------
+   The application itself is not in this file. It lives in app.enc, sealed with
+   AES-256-GCM. The key to that seal is held in Firestore and is released only
+   to an account that Firebase Authentication has verified and that appears on
+   the allow-list. Without a valid sign-in, app.enc is noise.
+
+   SETUP: fill in the CONFIG block below. See SECURITY-SETUP.md for the exact
+   Firebase console steps. The firebase values there are public identifiers by
+   design - they are not secrets and are safe to commit.
+   ========================================================================== */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {
+    getAuth, setPersistence, browserLocalPersistence,
+    signInWithEmailAndPassword, signOut, onAuthStateChanged,
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const CONFIG = {
+    firebase: {
+        apiKey:     "AIzaSyAdhfn-kvCUxTLqq6_Mu7S7NX-UTRXss_8",
+        authDomain: "kojcbiblewebapp.firebaseapp.com",
+        projectId:  "kojcbiblewebapp",
+        appId:      "1:946038076222:web:6715c6b538599aec35f26f",
+    },
+
+    // Sign-in uses a name, not an e-mail address. The name is turned into an
+    // internal address by appending this domain. It never needs to resolve or
+    // receive mail; it only has to match the accounts you create.
+    nameDomain: "bibleapp.local",
+
+    // Firestore location of the sealed key: collection, document, field.
+    vault: { collection: "vault", document: "app", field: "k" },
+
+    payload:  "app.enc",
+    manifest: "manifest.json",
+};
+
+/* ------------------------------------------------------------------ helpers */
+const $ = (id) => document.getElementById(id);
+const MAGIC = new TextEncoder().encode("BWAPPENC");
+
+function stage(name) {
+    for (const s of document.querySelectorAll(".stage")) s.classList.remove("on");
+    $("stage-" + name).classList.add("on");
+}
+function progress(fraction, text) {
+    if (text) $("step").textContent = text;
+    $("bar").style.width = Math.max(0, Math.min(1, fraction)) * 100 + "%";
+}
+function stop(why) {
+    $("stop-why").textContent = why;
+    stage("stop");
+}
+
+/* Deliberately vague about credentials: a distinct "no such user" message
+   would tell an attacker which names exist. */
+function readableError(err) {
+    const code = (err && err.code) || "";
+    if (code.startsWith("auth/too-many-requests"))
+        return "Too many attempts. This device is paused for a few minutes.";
+    if (code.startsWith("auth/network-request-failed"))
+        return "No connection to the server. Check the internet and try again.";
+    if (code.startsWith("auth/")) return "Incorrect name or password.";
+    return "Something went wrong. Try again.";
+}
+
+/* Client-side slow-down layered on top of Firebase's server-side throttling. */
+const THROTTLE = "bwapp.attempts";
+const failures = () => Number(sessionStorage.getItem(THROTTLE) || 0);
+const noteFailure = () => sessionStorage.setItem(THROTTLE, String(failures() + 1));
+const clearFailures = () => sessionStorage.removeItem(THROTTLE);
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/* ------------------------------------------------------------ prerequisites */
+if (!window.isSecureContext || !crypto.subtle) {
+    stop("This page must be opened over https:// for its security to work.");
+    throw new Error("insecure context");
+}
+if (typeof DecompressionStream === "undefined") {
+    stop("This browser is too old to open the library. Please use an up-to-date Chrome, Edge, Safari or Firefox.");
+    throw new Error("no DecompressionStream");
+}
+
+/* ------------------------------------------------------------------ firebase */
+const app  = initializeApp(CONFIG.firebase);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+await setPersistence(auth, browserLocalPersistence);
+
+/* ---------------------------------------------------------------- the vault */
+async function fetchVaultKey() {
+    let snap;
+    try {
+        snap = await getDoc(doc(db, CONFIG.vault.collection, CONFIG.vault.document));
+    } catch (err) {
+        if (err && err.code === "permission-denied") return null;   // not allow-listed
+        throw err;
+    }
+    if (!snap.exists()) return null;
+    const raw = snap.data()[CONFIG.vault.field];
+    if (typeof raw !== "string" || !raw) return null;
+
+    const bytes = Uint8Array.from(atob(raw.trim()), (c) => c.charCodeAt(0));
+    if (bytes.length !== 32) throw new Error("vault key is not 256-bit");
+    return crypto.subtle.importKey("raw", bytes, "AES-GCM", false, ["decrypt"]);
+}
+
+/* ------------------------------------------------------------- sealed bytes */
+/* The ciphertext is cached locally by build id. Caching it is safe: on its own
+   it is unreadable, and it saves re-downloading tens of megabytes each time. */
+async function loadSealed(build, onProgress) {
+    const url = CONFIG.payload + "?v=" + build;
+    let store = null;
+    try { store = await caches.open("bwapp-payload"); } catch { /* private mode */ }
+
+    if (store) {
+        const hit = await store.match(url);
+        if (hit) { onProgress(1); return new Uint8Array(await hit.arrayBuffer()); }
+        for (const stale of await store.keys()) store.delete(stale);   // old builds
+    }
+
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error("payload " + res.status);
+
+    const total = Number(res.headers.get("content-length")) || 0;
+    const reader = res.body.getReader();
+    const parts = [];
+    let got = 0;
+    for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        parts.push(value);
+        got += value.length;
+        if (total) onProgress(got / total);
+    }
+    const bytes = new Uint8Array(got);
+    let at = 0;
+    for (const p of parts) { bytes.set(p, at); at += p.length; }
+
+    if (store) { try { await store.put(url, new Response(bytes)); } catch { /* over quota */ } }
+    return bytes;
+}
+
+/* ---------------------------------------------------------------- unsealing */
+/* Mirrors tools/encrypt-app.mjs. Chunks are decrypted one at a time and piped
+   straight into the gzip decoder, so the whole library never sits in memory
+   three times over. */
+async function unseal(bytes, key, onProgress) {
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    for (let i = 0; i < 8; i++) {
+        if (bytes[i] !== MAGIC[i]) throw new Error("not a sealed library");
+    }
+    if (view.getUint8(8) !== 1) throw new Error("unsupported seal version");
+    const gzipped = (view.getUint8(9) & 1) !== 0;
+    const chunks = view.getUint32(12, true);
+
+    const decoder = gzipped ? new DecompressionStream("gzip") : new TransformStream();
+    const writer = decoder.writable.getWriter();
+    const text = new Response(decoder.readable).text();
+
+    let off = 20;
+    for (let i = 0; i < chunks; i++) {
+        const len = view.getUint32(off, true); off += 4;
+        const iv = bytes.subarray(off, off + 12); off += 12;
+        const body = bytes.subarray(off, off + len); off += len;
+
+        const aad = new Uint8Array(12);
+        aad.set(MAGIC, 0);
+        new DataView(aad.buffer).setUint32(8, i, true);
+
+        const plain = await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv, additionalData: aad, tagLength: 128 }, key, body,
+        );
+        await writer.write(new Uint8Array(plain));
+        onProgress((i + 1) / chunks);
+    }
+    await writer.close();
+    return text;
+}
+
+/* ------------------------------------------------------------------- launch */
+function launch(html) {
+    document.open();
+    document.write(html);
+    document.close();
+    // document.open() wipes the page, so the control is added afterwards.
+    setTimeout(addSignOut, 0);
+}
+
+/* A small, out-of-the-way way back out. Delete this function and the call to
+   it above if it ever gets in the way of the display. */
+function addSignOut() {
+    if (!document.body) return;
+    const b = document.createElement("button");
+    b.textContent = "Sign out";
+    b.title = "Sign out of the Bible Verse Display System";
+    b.style.cssText = [
+        "position:fixed", "left:6px", "bottom:6px", "z-index:2147483647",
+        "padding:2px 8px", "font:400 10px Inter,sans-serif", "color:#9ca3af",
+        "background:#1a1a1a", "border:1px solid #333", "border-radius:6px",
+        "cursor:pointer", "opacity:.2", "transition:opacity .2s",
+    ].join(";");
+    b.addEventListener("mouseenter", () => { b.style.opacity = "1"; });
+    b.addEventListener("mouseleave", () => { b.style.opacity = ".2"; });
+    b.addEventListener("click", async () => {
+        try { await caches.delete("bwapp-payload"); } catch { /* ignore */ }
+        await signOut(auth);
+        location.reload();
+    });
+    document.body.appendChild(b);
+}
+
+/* ---------------------------------------------------------------- open flow */
+let opening = false;
+async function openLibrary(user) {
+    if (opening) return;
+    opening = true;
+
+    const shown = (user.email || "").split("@")[0];
+    $("who-label").textContent = shown ? "Signed in as " + shown : " ";
+    stage("open");
+    progress(0.02, "Verifying access…");
+
+    try {
+        const key = await fetchVaultKey();
+        if (!key) {
+            await signOut(auth);
+            opening = false;
+            stop("This account is not authorised to open the library. Ask the administrator to enable it.");
+            return;
+        }
+
+        const bust = Math.random().toString(36).slice(2);
+        const manifest = await fetch(CONFIG.manifest + "?t=" + bust, { cache: "no-store" })
+            .then((r) => r.json());
+
+        progress(0.05, "Downloading the library…");
+        const sealed = await loadSealed(manifest.build, (f) => progress(0.05 + f * 0.70));
+
+        progress(0.75, "Unsealing…");
+        const html = await unseal(sealed, key, (f) => progress(0.75 + f * 0.24));
+
+        progress(1, "Opening…");
+        clearFailures();
+        launch(html);
+    } catch (err) {
+        console.error(err);
+        opening = false;
+        stop("The library could not be opened. Check the connection and try again.");
+    }
+}
+
+/* --------------------------------------------------------------- sign-in UI */
+$("signin-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = $("who").value.trim();
+    const pass = $("pw").value;
+    if (!name || !pass) return;
+
+    $("go").disabled = true;
+    $("go").textContent = "Checking…";
+    $("notice").textContent = "";
+
+    // Each failure on this device costs a little more time.
+    const penalty = Math.min(failures() * 1200, 6000);
+    if (penalty) await wait(penalty);
+
+    const address = name.includes("@")
+        ? name.toLowerCase()
+        : name.toLowerCase() + "@" + CONFIG.nameDomain;
+
+    try {
+        await signInWithEmailAndPassword(auth, address, pass);
+        clearFailures();
+        $("pw").value = "";
+        // onAuthStateChanged takes it from here.
+    } catch (err) {
+        noteFailure();
+        $("notice").textContent = readableError(err);
+        $("pw").value = "";
+        $("pw").focus();
+    } finally {
+        $("go").disabled = false;
+        $("go").textContent = "Sign in";
+    }
+});
+
+$("retry").addEventListener("click", async () => {
+    try { await signOut(auth); } catch { /* ignore */ }
+    location.reload();
+});
+
+/* Lets anyone clear a stuck session by visiting .../#signout */
+if (location.hash === "#signout") {
+    history.replaceState(null, "", location.pathname);
+    await signOut(auth).catch(() => {});
+}
+
+onAuthStateChanged(auth, (user) => {
+    if (user) openLibrary(user);
+    else { stage("signin"); $("who").focus(); }
+});
+</script>
+</body>
+</html>

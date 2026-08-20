@@ -1,0 +1,6 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# The sealed payload is binary. Line-ending normalisation would corrupt it and
+# the authentication tag would fail on every chunk.
+*.enc binary

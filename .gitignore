@@ -1,0 +1,19 @@
+# ---------------------------------------------------------------------------
+# The plaintext application. This repository is PUBLIC - committing this file
+# would publish the whole library and defeat the encryption entirely.
+# Keep your own offline backups of it.
+# ---------------------------------------------------------------------------
+src/app.html
+src/*.html
+
+# The master vault key. Losing it means app.enc can never be opened again;
+# leaking it means anyone can open app.enc without signing in.
+tools/.appkey
+
+# Scratch copies
+*.plain.html
+*.bak
+node_modules/
+
+# Local-only workbench: takes the key by hand, so it must never be published.
+tools/preview.html
