@@ -216,6 +216,7 @@ import {
     signInWithEmailAndPassword, signOut, onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { injectSpeedInsights } from "https://cdn.jsdelivr.net/npm/@vercel/speed-insights@2.0.0/dist/index.mjs";
 
 const CONFIG = {
     firebase: {
@@ -236,6 +237,10 @@ const CONFIG = {
     payload:  "app.enc",
     manifest: "manifest.json",
 };
+
+/* ---------------------------------------------------------- Speed Insights */
+// Initialize Vercel Speed Insights for performance monitoring
+injectSpeedInsights();
 
 /* ------------------------------------------------------------------ helpers */
 const $ = (id) => document.getElementById(id);
